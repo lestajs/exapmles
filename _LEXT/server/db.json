@@ -1,0 +1,29 @@
+{
+  "post": {
+    "id": 1,
+    "name": "name post",
+    "description": "description",
+    "content": "post content",
+    "comments": [
+      {
+        "id": 1,
+        "username": "User1",
+        "text": "Отличный пост!",
+        "replies": [
+          {
+            "id": 3,
+            "username": "User3",
+            "text": "Согласен!",
+            "replies": []
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "username": "User2",
+        "text": "Интересная информация.",
+        "replies": []
+      }
+    ]
+  }
+}

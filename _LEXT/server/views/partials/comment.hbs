@@ -1,0 +1,13 @@
+<div class="comment">
+    <strong>@{{username}}</strong>
+    <p>{{text}}</p>
+    <button class="respond" hidden>Ответить</button>
+    <div class="response"></div>
+    <div class="replies">
+        {{#if replies}}
+            {{#each replies}}
+                {{> comment}}
+            {{/each}}
+        {{/if}}
+    </div>
+</div>

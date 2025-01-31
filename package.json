@@ -1,0 +1,38 @@
+{
+  "name": "examples",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "clean": "rimraf .parcel-cache",
+    "CounterWidget": "parcel _Widget/CounterWidget/index.html",
+    "navbarWidget": "parcel _Widget/navbarWidget/index.html",
+    "ToDoListStore": "parcel _APP/ToDoListStore/index.html",
+    "ToDoListWidgets": "parcel ToDoListWidgets/index.html",
+    "livelyHooks": "parcel _APP/livelyHooks/index.html",
+    "listRendering": "parcel _APP/listRendering/index.html",
+    "LEXT": "nodemon _LEXT/server"
+  },
+  "author": "",
+  "license": "ISC",
+  "alias": {
+    "lesta": "./lesta.esm.js"
+  },
+  "devDependencies": {
+    "@parcel/transformer-inline-string": "^2.10.0",
+    "buffer": "^5.7.1",
+    "eslint": "^8.57.0",
+    "parcel": "^2.10.0",
+    "process": "^0.11.10",
+    "util": "^0.12.5"
+  },
+  "dependencies": {
+    "@parcel/transformer-css": "^2.10.0",
+    "axios": "^1.4.0",
+    "express": "^4.18.2",
+    "hbs": "^4.2.0",
+    "nodemon": "^3.1.9",
+    "postcss": "^8.4.29",
+    "postcss-nested": "^6.0.1"
+  },
+  "type": "module"
+}
