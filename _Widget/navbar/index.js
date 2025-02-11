@@ -1,8 +1,7 @@
 import { mountWidget } from 'lesta'
 import './style.css'
-const menu = document.querySelector('#menu')
 
-const widget = mountWidget({
+mountWidget({
 	options: {
     proxies: {
     	opened: false,
@@ -40,7 +39,5 @@ const widget = mountWidget({
 			media.addEventListener('change', updateMedia)
 		}
 	},
-	target: menu
+	target: document.querySelector('#menu')
 })
-
-// widget.unmount()

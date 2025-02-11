@@ -1,7 +1,6 @@
 import { mountWidget } from 'lesta'
-const root = document.querySelector('#root')
-// return Promise
-const widget = mountWidget({
+
+mountWidget({
 	options: {
     template: `
     <button class="prev">-</button>
@@ -26,7 +25,5 @@ const widget = mountWidget({
 			}
     }
 	},
-	target: root
+	target: document.querySelector('#root')
 })
-
-// widget.unmount()
