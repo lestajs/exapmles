@@ -1,7 +1,7 @@
 .cards {
     width: auto;
     display: grid;
-    grid-gap: 13px;
+    grid-gap: 20px;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     padding: 20px 0;
     text-indent: 15px;
@@ -26,6 +26,7 @@
     display: flex;
     justify-content: space-between;
 }
+
 .card .name {
     font-weight: bold;
 }
@@ -46,6 +47,14 @@
     overflow: hidden;
     color: transparent;
 }
+
+.loading .line {
+    background-color: #eee !important;
+}
+.loading .completed {
+    background-color: transparent !important;
+}
+
 .loading .name {
     min-width: 8ch;
     background-color: #e0e0e0;

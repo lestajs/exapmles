@@ -1,61 +1,31 @@
-import { delay, uid } from 'lesta'
+import api from '../../api'
 
 export default {
   params: {
-    DB: [],
-    async updateDB() {
-      await localStorage.setItem('tasks', JSON.stringify(this.DB))
-    },
-    async readDB() {
-      const db = await localStorage.getItem('tasks')
-      return db ? JSON.parse(db) : []
-    },
-    simulatedQuery: null
+    controller: null
   },
   proxies: {
     tasks: [],
-    total: 0,
     loading: true,
-    completedCount: null,
     isCompleted: false,
     isModify: false
-  },
-  setters: {
-    isCompleted(v) {
-      this.param.simulatedQuery?._reject?.()
-      return v
-    }
   },
   middlewares: {
     async addTask({ task }) {
       const { description, name } = task
-      const sample = { id: uid(), completed: false, description, name }
-      this.param.DB.unshift(sample)
-      await this.param.updateDB()
-      await this.method.setTotal()
-      return { task: sample }
+      return { task: await api.addTask(description, name) }
     },
     async editTask({ task }) {
-      const index = this.param.DB.findIndex(e => e.id === task.id)
-      this.param.DB[index] = task
-      await this.param.updateDB()
+      await api.editTask(task)
     },
     async removeTask({ id }) {
-      this.param.DB = this.param.DB.filter(e => e.id !== id)
-      await this.param.updateDB()
-      await this.method.setTotal()
+      await api.removeTask(id)
     },
     async completeTask({ id }) {
-      const index = this.param.DB.findIndex(e => e.id === id)
-      this.param.DB[index].completed = !this.param.DB[index].completed
-      await this.param.updateDB()
-    },
+      await api.completeTask(id)
+    }
   },
   methods: {
-    async setTotal() {
-      const data = await this.param.readDB()
-      this.proxy.total = data.length
-    },
     addTask({ task }) {
       this.proxy.tasks.unshift(task)
     },
@@ -71,40 +41,39 @@ export default {
       const index = this.proxy.tasks.findIndex(e => e.id === id)
       this.proxy.tasks[index].completed = !this.proxy.tasks[index].completed
     },
-    searchTasks({ value }) {
-      this.proxy.tasks = this.param.DB.filter(task => task.name.toLowerCase().includes(value.toLowerCase()))
+    async searchTasks({ value }) {
+      this.proxy.loading = true
       this.proxy.isCompleted = false
-      this.proxy.loading = false
+      this.param.controller.abort()
+      this.param.controller = new AbortController()
+      api.getTasks(this.param.controller.signal).then(data => {
+        this.proxy.tasks = data.filter(task => task.name.toLowerCase().includes(value.toLowerCase()))
+        this.proxy.loading = false
+      }).catch(_ => {})
     },
     filterTasks() {
       this.proxy.isCompleted = !this.proxy.isCompleted
-      if (this.proxy.isCompleted) {
-        this.param.simulatedQuery = delay(1000)
-        this.param.simulatedQuery.then(() => {
-          this.proxy.tasks = this.param.DB.filter(task => task.completed === this.proxy.isCompleted)
-          this.proxy.completedCount = this.proxy.tasks.length
-          this.proxy.loading = false
-        }).catch(()=> {})
-      } else if (!this.param.simulatedQuery?._pending) {
-        this.proxy.tasks = this.param.DB
-        this.proxy.completedCount = null
-      }
+      this.proxy.loading = true
+      this.param.controller.abort()
+      this.param.controller = new AbortController()
+      api.getTasks(this.param.controller.signal).then(data => {
+        this.proxy.tasks = this.proxy.isCompleted ? data.filter(task => task.completed === this.proxy.isCompleted) : data
+        this.proxy.loading = false
+      }).catch(_ => {})
     },
     changeMode() {
       this.proxy.isModify = !this.proxy.isModify
     }
   },
   async loaded() {
-    const data = await this.options.params.readDB()
-    this.options.params.DB = data
-    this.options.proxies.tasks = new Array(data.length).fill({ id: null, completed: false, description: null, name: null})
-    this.options.proxies.total = data.length
+    await api.connect()
+    this.options.proxies.tasks = new Array(30).fill({ id: null, completed: false, description: null, name: null})
   },
-  async created() {
-    delay(2000).then(async () => {
-      if (!this.proxy.loading) return
-      this.proxy.tasks = this.param.DB
+  created() {
+    this.param.controller = new AbortController()
+    api.getTasks(this.param.controller.signal).then(tasks => {
+      this.proxy.tasks = tasks
       this.proxy.loading = false
-    })
+    }).catch(_ => {})
   }
 }

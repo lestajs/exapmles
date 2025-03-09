@@ -1,15 +1,25 @@
-#Exapmles
+##_APP
+createApp
 
-##counter
+###counter
 
-##counterWebComponent
+###counterWebComponent
 
-##navbar
+###markupFirst
+
+###similarNodes
+
+
+##_Widget
+mountWidget
 
 ##todolistStore
 
-##listRendering
+###listRendering
 
-##livelyHooks
+###livelyHooks
 
-##LEXT
+
+
+##_LEXT
+

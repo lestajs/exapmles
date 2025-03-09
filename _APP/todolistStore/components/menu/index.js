@@ -4,12 +4,9 @@ import { mapProps } from 'lesta'
 export default {
   template:
     `<div class="menu">
-      <div class="count"></div>
-      <div class="buttons">
-        <button class="filter blue"></button>
-        <button class="add green"></button>
-        <button class="mode"></button>
-      </div>
+      <button class="filter blue"></button>
+      <button class="add green"></button>
+      <button class="mode"></button>
     </div>`,
   props: {
     proxies: {
@@ -19,17 +16,8 @@ export default {
       ...mapProps(['filterTasks', 'changeMode'], { store: 'tasks' })
     }
   },
-  sources: {
-    count: () => import('../count'),
-  },
   nodes() {
     return {
-      count: {
-        component: {
-          src: this.source.count,
-          induced: () => this.proxy.isCompleted
-        }
-      },
       filter: {
         _text: () => this.proxy.isCompleted ? 'Hide completed' : 'Show completed',
         onclick: () => this.method.filterTasks()

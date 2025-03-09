@@ -1,11 +1,5 @@
 .menu {
     display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: 20px;
-}
-.menu .buttons {
-    display: flex;
     gap: 10px;
     flex-wrap: wrap;
 }

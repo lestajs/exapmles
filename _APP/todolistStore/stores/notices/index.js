@@ -1,4 +1,4 @@
-import { delay } from 'lesta'
+import { delayRace } from 'lesta'
 
 export default {
   proxies: {
@@ -7,7 +7,7 @@ export default {
   methods: {
     async addNotice({ text }) {
       this.proxy.notices.unshift({ text })
-      await delay(3000)
+      await delayRace(3000)
       this.proxy.notices.pop()
     },
     removeNotice({ index }) {

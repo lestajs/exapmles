@@ -1,13 +1,11 @@
 import './index.css'
 
 export default {
-  template() {
-    return `
-      <dialog class="dialog" ${this.proxy.opened ? 'open' : ''}>
-        <div class="close"></div>
-        <div spot="content"></slot>
-      </dialog>`
-  },
+  template: `
+    <dialog class="dialog">
+      <div class="close"></div>
+      <div spot="content"></slot>
+    </dialog>`,
   props: {
     proxies: {
       opened: {
@@ -20,6 +18,11 @@ export default {
   },
   spots: ['content'],
   actions: ['show', 'close'],
+  setters: {
+    opened(v) {
+      return typeof v === 'boolean' ? v : false
+    }
+  },
   handlers: {
     opened(v) {
       v ? this.node.dialog.target.showModal() : this.node.dialog.target.close()

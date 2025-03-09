@@ -1,5 +1,4 @@
 import './index.css'
-import { nextFrame } from 'lesta'
 
 export default {
   template: `
@@ -37,9 +36,5 @@ export default {
         }
       }
     }
-  },
-  async mounted() {
-    await nextFrame()
-    this.node.notice.target.classList.add('visible')
   }
 }

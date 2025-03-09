@@ -12,11 +12,26 @@ export default {
       search: {}
     }
   },
+  params: {
+    debouncedSearch: null,
+    isPaste: false
+  },
   nodes() {
     return {
       search: {
-        oninput: debounce((e) => this.method.search({ value: e.target.value }), 250)
+        oninput: (e) => {
+          if (this.param.isPaste) {
+            this.method.search({value: e.target.value})
+            this.param.isPaste = false
+          } else {
+            this.param.debouncedSearch(e)
+          }
+        },
+        onpaste: () => this.param.isPaste = true
       }
     }
+  },
+  created() {
+    this.param.debouncedSearch = debounce((e) => this.method.search({value: e.target.value}), 250)
   }
 }

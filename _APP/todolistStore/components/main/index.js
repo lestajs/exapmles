@@ -4,7 +4,7 @@ import search from '../search'
 import menu from '../menu'
 import notification from '../notification'
 import controls from '../controls'
-import total from '../total'
+import results from '../results'
 import { mapProps } from 'lesta'
 
 export default {
@@ -34,9 +34,7 @@ export default {
               component: {
                 src: search,
                 methods: {
-                  search: ({ value }) => {
-                    this.method.searchTasks({ value })
-                  }
+                  search: ({ value }) => this.method.searchTasks({ value })
                 }
               }
             },
@@ -55,7 +53,7 @@ export default {
       },
       bottom_panel: { // global selector function in createApp
         component: {
-          src: total
+          src: results
         }
       },
       cards: {

@@ -1,7 +1,7 @@
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
+  for (var name2 in all)
+    __defProp(target, name2, { get: all[name2], enumerable: true });
 };
 
 // packages/utils/isObject.js
@@ -31,80 +31,69 @@ function deliver(target, path = [], value) {
 }
 
 // packages/utils/mapProps.js
-function mapProps(arr, options) {
-  const res = {};
-  arr.forEach((key) => Object.assign(res, { [key]: options }));
-  return res;
+function mapProps(keys, value) {
+  return keys.reduce((acc, key) => {
+    acc[key] = value;
+    return acc;
+  }, {});
 }
 
 // packages/utils/debounce.js
-function debounce(fn, timeout = 120) {
+function debounce(fn, timeout = 150) {
   let timer;
-  let lastCall = 0;
   return (...args) => {
-    const now = Date.now();
-    if (now - lastCall > timeout) {
-      lastCall = now;
-      fn(...args);
-    } else {
-      clearTimeout(timer);
-    }
+    clearTimeout(timer);
     timer = setTimeout(() => {
-      lastCall = now;
       fn(...args);
     }, timeout);
   };
 }
 
-// packages/utils/throttling.js
-function throttling(fn, timeout = 50) {
-  let timer;
+// packages/utils/throttle.js
+function throttle(fn, timeout = 150) {
+  let timer = null;
   return function perform(...args) {
-    if (timer)
+    if (timer !== null)
       return;
     timer = setTimeout(() => {
-      fn(...args);
-      clearTimeout(timer);
+      fn.apply(this, args);
       timer = null;
     }, timeout);
   };
 }
 
-// packages/utils/delay.js
-function delay(ms = 0) {
-  let timer, _reject;
-  const promise = new Promise((resolve, reject) => {
-    _reject = () => {
-      clearTimeout(timer);
-      reject();
-      promise._pending = false;
-      promise.rejected = true;
-    };
-    timer = setTimeout(() => {
-      clearTimeout(timer);
+// packages/utils/delayRace.js
+function delayRace(ms = 0, signal) {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new Error("Aborted"));
+      return;
+    }
+    const timeoutId = setTimeout(() => {
       resolve();
-      promise._pending = false;
-      promise._fulfilled = true;
+      cleanup();
     }, ms);
+    const abortHandler = () => {
+      clearTimeout(timeoutId);
+      reject(new Error("Aborted"));
+      cleanup();
+    };
+    const cleanup = () => signal?.removeEventListener("abort", abortHandler);
+    signal?.addEventListener("abort", abortHandler);
   });
-  promise._reject = _reject;
-  promise._pending = true;
-  promise._rejected = false;
-  promise._fulfilled = false;
-  return promise;
 }
 
 // packages/utils/revocablePromise.js
 async function revocablePromise(promise, signal, aborted) {
   return new Promise((resolve, reject) => {
-    const abortListener = () => {
+    const abortHandler = () => {
       reject();
       aborted?.();
-      signal.removeEventListener("abort", abortListener);
+      signal?.removeEventListener("abort", abortHandler);
     };
-    signal.addEventListener("abort", abortListener);
-    if (signal.aborted)
-      abortListener();
+    signal?.addEventListener("abort", abortHandler);
+    if (signal?.aborted)
+      abortHandler();
     promise.then(resolve).catch(reject);
   });
 }
@@ -137,36 +126,6 @@ function deleteReactive(reactivity, path) {
       reactivity.delete(fn);
     }
   }
-}
-
-// packages/utils/uid.js
-function uid() {
-  const buf = new Uint32Array(4);
-  window.crypto.getRandomValues(buf);
-  let idx = -1;
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-    idx++;
-    const r = buf[idx >> 3] >> idx % 8 * 4 & 15;
-    const v = c === "x" ? r : r & 3 | 8;
-    return v.toString(16);
-  });
-}
-
-// packages/utils/deepFreeze.js
-function deepFreeze(obj) {
-  Object.freeze(obj);
-  Object.getOwnPropertyNames(obj).forEach((prop) => {
-    const propVal = obj[prop];
-    if (propVal !== null && (typeof propVal === "object" || typeof propVal === "function") && !Object.isFrozen(propVal)) {
-      deepFreeze(propVal);
-    }
-  });
-  return obj;
-}
-
-// packages/utils/nextFrame.js
-async function nextFrame() {
-  return new Promise(requestAnimationFrame);
 }
 
 // packages/utils/escHtml.js
@@ -232,9 +191,9 @@ var router = {
 };
 
 // packages/utils/errors/component.js
-var errorComponent = (name, code, param = "") => {
+var errorComponent = (name2, code, param = "") => {
   if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "local") {
-    console.error(`Lesta |${code}| Error creating component "${name}": ${component[code]}`, param);
+    console.error(`Lesta |${code}| Error creating component "${name2}": ${component[code]}`, param);
   }
 };
 
@@ -313,6 +272,10 @@ var InitBasic = class {
       options: component2,
       phase: 0,
       abort: () => controller.abort(),
+      id: () => {
+        app.id++;
+        return app.name + app.id;
+      },
       abortSignal: controller.signal,
       node: {},
       param: {},
@@ -432,9 +395,9 @@ function active(reactivity, ref, value) {
 }
 
 // packages/utils/errors/node.js
-var errorNode = (name, code, param = "") => {
+var errorNode = (name2, code, param = "") => {
   if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "local") {
-    console.error(`Lesta |${code}| Error in node "${name}": ${node[code]}`, param);
+    console.error(`Lesta |${code}| Error in node "${name2}": ${node[code]}`, param);
   }
 };
 
@@ -463,8 +426,8 @@ var InitNode = class extends InitBasic {
         }
       },
       set: (target, value, ref) => {
-        for (const name in this.context.node) {
-          this.actives(this.context.node[name], ref, value);
+        for (const name2 in this.context.node) {
+          this.actives(this.context.node[name2], ref, value);
         }
         this.component.handlers?.[ref]?.bind(this.context)(value);
       },
@@ -480,26 +443,26 @@ var InitNode = class extends InitBasic {
       const nodes = this.component.nodes.bind(this.context)();
       const container = this.context.container;
       const t = container.target;
-      for (const name in nodes) {
-        const s = nodes[name].selector || this.context.app.selector || `.${name}`;
-        const selector = typeof s === "function" ? s(name) : s;
+      for (const name2 in nodes) {
+        const s = nodes[name2].selector || this.context.app.selector || `.${name2}`;
+        const selector = typeof s === "function" ? s(name2) : s;
         const target = t.querySelector(selector) || t.matches(selector) && t;
-        const nodepath = container.nodepath + "." + name;
+        const nodepath = container.nodepath + "." + name2;
         if (target) {
           if (target._engaged)
-            return errorNode(nodepath, 106, name);
+            return errorNode(nodepath, 106, name2);
           target._engaged = true;
           if (container.spot && Object.values(container.spot).includes(target)) {
-            errorNode(nodepath, 107, name);
+            errorNode(nodepath, 107, name2);
             continue;
           }
-          Object.assign(this.context.node, { [name]: { target, nodepath, nodename: name, action: {}, prop: {}, directives: {} } });
+          Object.assign(this.context.node, { [name2]: { target, nodepath, nodename: name2, action: {}, prop: {}, directives: {} } });
         } else
           errorNode(nodepath, 105);
       }
       Object.preventExtensions(this.context.node);
-      for await (const [name, nodeElement] of Object.entries(this.context.node)) {
-        const n = this.factory(nodes[name], this.context, nodeElement, this.impress, this.app);
+      for await (const [name2, nodeElement] of Object.entries(this.context.node)) {
+        const n = this.factory(nodes[name2], this.context, nodeElement, this.impress, this.app);
         await n.controller();
       }
     }
@@ -507,9 +470,9 @@ var InitNode = class extends InitBasic {
 };
 
 // packages/utils/errors/props.js
-var errorProps = (name, type, prop, code, param = "") => {
+var errorProps = (name2, type, prop, code, param = "") => {
   if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "local") {
-    console.error(`Lesta |${code}| Error in props ${type} "${prop}" in component "${name}": ${props[code]}`, param);
+    console.error(`Lesta |${code}| Error in props ${type} "${prop}" in component "${name2}": ${props[code]}`, param);
   }
 };
 
@@ -521,24 +484,24 @@ var Props = class {
     this.container = context.container;
     this.app = app;
   }
-  async setup(cp) {
-    if (this.props.proxies && Object.keys(this.props.proxies).length && !cp?.proxies)
+  async setup(p) {
+    if (this.props.proxies && Object.keys(this.props.proxies).length && !p?.proxies)
       return errorProps(this.container.nodepath, 306);
     this.context.unrelatedProxy = (key) => this.props.proxies[key]?.hasOwnProperty("_independent") ? this.props.proxies[key]._independent : true;
-    if (cp) {
-      await this.params(cp.params);
-      await this.methods(cp.methods);
-      return await this.proxies(cp.proxies);
+    if (p) {
+      await this.params(p.params);
+      await this.methods(p.methods);
+      return await this.proxies(p.proxies);
     }
   }
-  store(s) {
-    return typeof s === "function" ? s.bind(this)() : s;
+  prop(p) {
+    return typeof p === "function" ? p.bind(this.context)() : p;
   }
-  validation(target, prop, key, value, name) {
+  validation(target, prop, key, value, name2) {
     const np = this.container.nodepath;
-    const checkType = (v, t) => v && t && !(typeof v === t || t === "array" && Array.isArray(v)) && errorProps(np, name, key, 304, t);
-    const checkEnum = (v, e) => v && Array.isArray(e) && (!e.includes(v) && errorProps(np, name, key, 302, v));
-    target[key] = value ?? ((prop.required && errorProps(np, name, key, 303)) ?? prop.default ?? value);
+    const checkType = (v, t) => v && t && !(typeof v === t || t === "array" && Array.isArray(v)) && errorProps(np, name2, key, 304, t);
+    const checkEnum = (v, e) => v && Array.isArray(e) && (!e.includes(v) && errorProps(np, name2, key, 302, v));
+    target[key] = value ?? ((prop.required && errorProps(np, name2, key, 303)) ?? prop.default ?? value);
     if (typeof prop === "string")
       checkType(target[key], prop);
     if (Array.isArray(prop))
@@ -547,7 +510,7 @@ var Props = class {
       checkType(target[key], prop.type);
       checkEnum(target[key], prop.enum);
       if (prop.validation && !prop.validation.bind(this.context)(target[key]))
-        errorProps(np, name, key, 308);
+        errorProps(np, name2, key, 308);
     }
     return target[key];
   }
@@ -556,7 +519,8 @@ var Props = class {
       const proxiesData = {};
       const context = this.context;
       for (const key in proxies) {
-        const prop = proxies[key];
+        const prop = this.prop(proxies[key]);
+        const s = prop.store;
         this.container.prop[key] = {
           update: (value2, path) => {
             if (path)
@@ -567,8 +531,7 @@ var Props = class {
         let value = null;
         if (this.props.proxies?.hasOwnProperty(key)) {
           value = this.props.proxies[key]?._value;
-        } else if (prop.store) {
-          const s = this.store(prop.store);
+        } else if (s) {
           const storeModule = await this.app.store?.init(s);
           if (!storeModule)
             return errorProps(this.container.nodepath, "proxies", key, 307, s);
@@ -581,11 +544,11 @@ var Props = class {
   }
   async params(params) {
     for (const key in params) {
-      const prop = params[key];
+      const prop = this.prop(params[key]);
+      const s = prop.store;
       const paramValue = async () => {
         let data = null;
-        if (prop.store) {
-          const s = this.store(prop.store);
+        if (s) {
           const storeModule = await this.app.store?.init(s);
           if (!storeModule)
             return errorProps(this.container.nodepath, "params", key, 307, s);
@@ -610,9 +573,9 @@ var Props = class {
       };
     };
     for (const key in methods) {
-      const prop = methods[key];
-      if (prop.store) {
-        const s = this.store(prop.store);
+      const prop = this.prop(methods[key]);
+      const s = prop.store;
+      if (s) {
         const storeModule = await this.app.store?.init(s);
         if (!storeModule)
           return errorProps(this.container.nodepath, "methods", key, 307, s);
@@ -651,9 +614,9 @@ var InitNodeComponent = class extends InitNode {
       active(c.reactivity?.component, ref, value);
     };
     const spotsReactivity = (c) => {
-      for (const name in c.spot) {
-        reactivity(c.spot[name]);
-        spotsReactivity(c.spot[name]);
+      for (const name2 in c.spot) {
+        reactivity(c.spot[name2]);
+        spotsReactivity(c.spot[name2]);
       }
     };
     reactivity(nodeElement);
@@ -782,7 +745,7 @@ var DOMProperties_default = {
     if (typeof this.nodeOptions[key] === "function") {
       this.nodeElement.target[key] = (event) => {
         this.nodeOptions[key].bind(this.context)(event);
-      }
+      };
     }
   },
   general(key) {
@@ -1023,13 +986,13 @@ var component_default = {
     this.nodeElement.created = true;
     if (!spots)
       return;
-    for await (const [name, options] of Object.entries(spots)) {
-      if (!nodeElement.spot?.hasOwnProperty(name)) {
-        errorComponent(nodeElement.nodepath, 202, name);
+    for await (const [name2, options] of Object.entries(spots)) {
+      if (!nodeElement.spot?.hasOwnProperty(name2)) {
+        errorComponent(nodeElement.nodepath, 202, name2);
         continue;
       }
-      const spotElement = nodeElement.spot[name];
-      Object.assign(spotElement, { parent: nodeElement, nodepath: nodeElement.nodepath + "." + name, nodename: name, action: {}, prop: {}, spoted: true });
+      const spotElement = nodeElement.spot[name2];
+      Object.assign(spotElement, { parent: nodeElement, nodepath: nodeElement.nodepath + "." + name2, nodename: name2, action: {}, prop: {}, spoted: true });
       const n = factoryNodeComponent_default(options, this.context, spotElement, this.impress, this.app);
       await n.controller();
     }
@@ -1101,7 +1064,7 @@ function renderComponent(nodeElement, component2) {
   const spots = (node2) => {
     if (options.spots?.length)
       node2.spot = {};
-    options.spots?.forEach((name) => Object.assign(node2.spot, { [name]: { target: node2.target.querySelector(`[spot="${name}"]`) } }));
+    options.spots?.forEach((name2) => Object.assign(node2.spot, { [name2]: { target: node2.target.querySelector(`[spot="${name2}"]`) } }));
   };
   if (nodeElement.iterated) {
     const parent = nodeElement.parent;
@@ -1169,8 +1132,9 @@ async function lifecycle(component2, render, aborted, completed, propsData = {})
       await revocablePromise(hook(), component2.context.abortSignal);
       component2.context.phase++;
     }
-  } catch {
+  } catch (e) {
     aborted();
+    throw e;
   }
   completed?.();
   return component2.context.container;
@@ -1192,9 +1156,11 @@ async function mount(module, container, propsData = {}, app = {}) {
 
 // packages/lesta/createApp.js
 function createApp(app = {}) {
+  app.id = 0;
+  app.name ||= "_";
   app.mount = async (container, propsData) => {
-    const { options, target, name = "root" } = container;
-    return await mount(options, { target, nodepath: name, action: {}, prop: {} }, propsData, app);
+    const { options, target } = container;
+    return await mount(options, { target, nodepath: app.name, action: {}, prop: {} }, propsData, app);
   };
   Object.assign(app, { router: {}, store: {} });
   Object.preventExtensions(app);
@@ -1202,18 +1168,18 @@ function createApp(app = {}) {
 }
 
 // packages/utils/errors/store.js
-var errorStore = (name, code, param = "") => {
+var errorStore = (name2, code, param = "") => {
   if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "local") {
-    console.error(`Lesta |${code}| Error in store "${name}": ${store[code]}`, param);
+    console.error(`Lesta |${code}| Error in store "${name2}": ${store[code]}`, param);
   }
 };
 
 // packages/store/index.js
 var Store = class {
-  constructor(module, app, name) {
+  constructor(module, app, name2) {
     this.store = module;
     this.context = {
-      name,
+      name: name2,
       app,
       options: module,
       reactivity: /* @__PURE__ */ new Map(),
@@ -1306,9 +1272,9 @@ function createStores(app, storesOptions) {
 }
 
 // packages/utils/errors/router.js
-var errorRouter = (name = "", code, param = "") => {
+var errorRouter = (name2 = "", code, param = "") => {
   if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "local") {
-    console.error(`Lesta |${code}| Error in route "${name}": ${router[code]}`, param);
+    console.error(`Lesta |${code}| Error in route "${name2}": ${router[code]}`, param);
   }
 };
 var warnRouter = (code, param = "") => {
@@ -1688,16 +1654,18 @@ function factoryNode_default(...args) {
 }
 
 // packages/lesta/mountWidget.js
-async function mountWidget({ options, target, name = "root" }, app = {}) {
+async function mountWidget({ options, target }, app = {}) {
   if (!options)
     return errorComponent(name, 216);
   if (!target)
     return errorComponent(name, 217);
+  app.id = 0;
+  app.name ||= "_";
   const src = { ...options };
   const controller = new AbortController();
   const container = {
     target,
-    nodepath: name,
+    nodepath: app.name,
     action: {},
     unmount() {
       controller.abort();
@@ -1720,18 +1688,14 @@ export {
   createRouter,
   createStores,
   debounce,
-  deepFreeze,
-  delay,
-  deleteReactive,
+  delayRace,
   deliver,
   escHtml,
   isObject,
   loadModule,
   mapProps,
   mountWidget,
-  nextFrame,
   replicate,
   revocablePromise,
-  throttling,
-  uid
+  throttle
 };
