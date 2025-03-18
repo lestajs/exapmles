@@ -67,7 +67,7 @@ export default {
         }
       })
       // this.node.popup.spot.content.unmount() // if necessary
-      this.node.popup.action.show()
+      // this.node.popup.action.show()
     }
   },
   loaded() {

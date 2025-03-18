@@ -46,5 +46,9 @@ export default {
     close() {
       if (this.unrelatedProxy('opened')) this.proxy.opened = false
     }
+  },
+  refreshed({ cause, data }) {
+    // cause = 'spotMounted'
+    if (data.spotname === 'content') this.proxy.opened = true
   }
 }
