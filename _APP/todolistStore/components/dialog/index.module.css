@@ -11,7 +11,7 @@
     overflow-y: auto;
     z-index: 999;
 }
-.dialog .close {
+.close {
     width: min-content;
     top: 10px;
     position: sticky;
@@ -21,7 +21,7 @@
     margin-bottom: 10px;
     cursor: pointer;
 }
-.dialog .close:after {
+.close:after {
     content: '';
     display: block;
     width: 14px;
