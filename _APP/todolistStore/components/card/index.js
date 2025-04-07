@@ -1,16 +1,8 @@
 import './index.css'
+import template from 'bundle-text:./index.html'
 
 export default {
-  template: `
-  <div class="grid-card">
-    <div class="card">
-      <div class="line">
-        <span class="name"></span>
-      </div>
-      <div class="description"></div>
-      <div spot="bottom"></div>
-    </div>
-  </div>`,
+  template,
   spots: ['bottom'],
   props: {
     proxies: {

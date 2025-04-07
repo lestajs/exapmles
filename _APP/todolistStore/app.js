@@ -10,7 +10,7 @@ export default {
     </div>`,
   directives: { // local directives
     _teleport: {
-      create: (node, value) => value().append(node)
+      create: (node, value) => value.append(node.target)
     }
   },
   props: {
@@ -27,7 +27,7 @@ export default {
   nodes() {
     return {
       popup: {
-        _teleport: () => document.body,
+        _teleport: document.body,
         component: {
           src: dialog,
           methods: {
@@ -75,5 +75,7 @@ export default {
   },
   created() {},
   rendered() {},
-  mounted() {}
+  mounted() {},
+  unmounted() {},
+  refreshed() {}
 }

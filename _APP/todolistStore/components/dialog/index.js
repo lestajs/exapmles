@@ -1,11 +1,13 @@
-import './index.css'
+import styles from './index.module.css'
 
+console.log(styles)
 export default {
   template: `
     <dialog class="dialog">
       <div class="close"></div>
       <div spot="content"></slot>
     </dialog>`,
+  styles: styles,
   props: {
     proxies: {
       opened: {

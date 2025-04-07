@@ -10,36 +10,34 @@ function addToNode(name, change, checkedItems = {}) {
 	}
 }
 mountWidget({
-	options: {
-		template: `
-    <label><input type="checkbox" name="all">all</label>
-    <label><input type="checkbox" name="first">first</label>
-    <label><input type="checkbox" name="second">second</label>`,
-		proxies: {
-			selectAll: false,
-			checkedItems: {
-				first: false,
-				second: true
-			}
-		},
-		nodes() {
-			const { toggleAll, changeItem } = this.method
-			const { checkedItems } = this.proxy
-			return {
-				...addToNode('all', toggleAll),
-				...addToNode('first', changeItem, checkedItems),
-				...addToNode('second', changeItem, checkedItems)
-			}
-		},
-		methods: {
-			changeItem(checked, name) {
-				this.proxy.checkedItems[name] = checked
-			},
-			toggleAll(checked) {
-				Object.keys(this.proxy.checkedItems).forEach(key => this.proxy.checkedItems[key] = checked)
-				this.proxy.selectAll = checked
-			}
+	template: `
+	<label><input type="checkbox" name="all">all</label>
+	<label><input type="checkbox" name="first">first</label>
+	<label><input type="checkbox" name="second">second</label>`,
+	proxies: {
+		selectAll: false,
+		checkedItems: {
+			first: false,
+			second: true
 		}
 	},
-	target: document.querySelector('#root')
-})
+	nodes() {
+		const { toggleAll, changeItem } = this.method
+		const { checkedItems } = this.proxy
+		return {
+			...addToNode('all', toggleAll),
+			...addToNode('first', changeItem, checkedItems),
+			...addToNode('second', changeItem, checkedItems)
+		}
+	},
+	methods: {
+		changeItem(checked, name) {
+			this.proxy.checkedItems[name] = checked
+		},
+		toggleAll(checked) {
+			Object.keys(this.proxy.checkedItems)
+			.forEach(key => this.proxy.checkedItems[key] = checked)
+			this.proxy.selectAll = checked
+		}
+	}
+}, document.querySelector('#root'))

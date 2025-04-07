@@ -52,4 +52,4 @@ const widget = {
 		}
 	}
 }
-mountWidget({ options: widget, target: document.querySelector('#root') })
+mountWidget(widget, document.querySelector('#root'))

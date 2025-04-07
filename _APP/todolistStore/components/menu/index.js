@@ -4,8 +4,8 @@ import { mapProps } from 'lesta'
 export default {
   template:
     `<div class="menu">
-      <button class="filter blue"></button>
-      <button class="add green"></button>
+      <button class="filter"></button>
+      <button class="add"></button>
       <button class="mode"></button>
     </div>`,
   props: {

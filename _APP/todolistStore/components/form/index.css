@@ -10,4 +10,8 @@ dialog {
         display: block;
         margin-left: auto;
     }
+    .save {
+        background-color: #222;
+        color: white;
+    }
 }

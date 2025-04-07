@@ -7,13 +7,13 @@ export default {
     return `
       <div>
         <label for="${idName}">Name</label>
-        <input id="${idName}" class="name" placeholder="Name" type="text">
+        <input id="${idName}" class="name" type="text">
       </div>
       <div>
         <label for="${idDesc}">Description</label>
-        <input id="${idDesc}" class="desc" placeholder="Description" type="text">
+        <input id="${idDesc}" class="desc" type="text">
       </div>
-      <button class="save green">Save</button>`
+      <button class="save">Save</button>`
   },
   props: {
     params: {

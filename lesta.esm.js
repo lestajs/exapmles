@@ -466,7 +466,7 @@ var InitNode = class {
       const container = this.context.container;
       const t = container.target;
       for (const name2 in nodes) {
-        const s = nodes[name2].selector || this.context.app.selector || `.${name2}`;
+        const s = nodes[name2].selector || this.context.app.selectors || `.${name2}`;
         const selector = typeof s === "function" ? s(name2) : s;
         const target = t.querySelector(selector) || t.matches(selector) && t;
         const nodepath = container.nodepath + "." + name2;
@@ -474,6 +474,11 @@ var InitNode = class {
           if (target._engaged)
             return errorNode(nodepath, 106, name2);
           target._engaged = true;
+          const c = this.component.styles?.[name2];
+          if (typeof c === "string" && c.trim()) {
+            target.classList.remove(name2);
+            target.classList.add(c);
+          }
           if (container.spot && Object.values(container.spot).includes(target)) {
             errorNode(nodepath, 107, name2);
             continue;
@@ -696,7 +701,7 @@ var InitNodeComponent = class extends InitNode {
 function mixins(target) {
   if (!target.mixins?.length)
     return target;
-  const properties = ["directives", "params", "proxies", "methods", "handlers", "setters", "sources"];
+  const properties = ["styles", "directives", "params", "proxies", "methods", "handlers", "setters", "sources"];
   const props2 = ["params", "proxies", "methods"];
   const hooks = ["loaded", "rendered", "created", "mounted", "unmounted", "refreshed"];
   const result = { props: {}, actions: [], spots: [] };
@@ -753,16 +758,16 @@ var directiveProperties_default = {
     const options = this.nodeOptions[key];
     const { create, update, destroy } = directive;
     Object.assign(n.directives, { [key]: {
-        create: () => create ? create.bind(directive)(n.target, options) : {},
-        destroy: () => destroy ? destroy.bind(directive)(n.target, options) : {}
+        create: () => create ? create.bind(directive)(n, options) : {},
+        destroy: () => destroy ? destroy.bind(directive)(n, options) : {}
       } });
     create && n.directives[key].create();
     const handle = (v, k, o) => {
-      const active2 = (value) => update.bind(directive)(n.target, value, k, o);
+      const active2 = (value) => update.bind(directive)(n, value, k, o);
       if (typeof v === "function") {
         this.impress.collect = true;
-        active2(v(n.target));
-        this.reactiveNode(this.impress.define(), () => active2(v(n.target)));
+        active2(v(n, o));
+        this.reactiveNode(this.impress.define(), () => active2(v(n, o)));
       } else
         active2(v);
     };
@@ -969,13 +974,13 @@ var component_default = {
     if (this.nodeElement.iterated)
       return errorComponent(this.nodeElement.nodepath, 208);
     this.nodeElement.mount = (options) => {
-      if (!Object.keys(options).length) return
+      if (!Object.keys(options).length)
+        return;
       this.nodeElement.unmount?.();
       this.nodeElement.created = false;
       const { spotname, parent } = this.nodeElement;
-      if (spotname) {
-        parent.refresh({cause: "spotMounted", data: {spotname}});
-      }
+      if (spotname)
+        parent.refresh({ cause: "spotMounted", data: { spotname } });
       return options.iterate ? this.iterative(options) : this.basic(options);
     };
     const mount2 = () => this.nodeElement.mount(this.nodeOptions.component);
@@ -1089,7 +1094,7 @@ function factoryNodeComponent_default(...args) {
 function templateToHTML(template, context) {
   const html = typeof template === "function" ? template.bind(context)() : template;
   const capsule = document.createElement("div");
-  capsule.innerHTML = html.trim();
+  capsule.innerHTML = html.trim().replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gi, "");
   return capsule.childNodes;
 }
 
@@ -1201,10 +1206,7 @@ async function mount(module, container, propsData = {}, app = {}) {
 function createApp(app = {}) {
   app.id = 0;
   app.name ||= "_";
-  app.mount = async (container, propsData) => {
-    const { options, target } = container;
-    return await mount(options, { target, nodepath: app.name, action: {}, prop: {} }, propsData, app);
-  };
+  app.mount = async (options, target, propsData) => await mount(options, { target, nodepath: app.name, action: {}, prop: {} }, propsData, app);
   Object.assign(app, { router: {}, store: {} });
   Object.preventExtensions(app);
   return app;
@@ -1346,10 +1348,10 @@ var route_default = {
       });
       const to = {
         path: this.result.map.at(0) || "/",
-        params,
+        params: Object.keys(params).length ? params : void 0,
         fullPath: this.url.href,
         hash: this.url.hash,
-        query: Object.fromEntries(new URLSearchParams(this.url.search)),
+        query: this.url.search ? Object.fromEntries(new URLSearchParams(this.url.search)) : void 0,
         name: target.name,
         extra: target.extra,
         route: {}
@@ -1441,6 +1443,9 @@ function link(v, t, l) {
   if (!v)
     return "/";
   if (typeof v === "object") {
+    v = replicate(v);
+    if (v.query)
+      v.query = replicate(v.query);
     if (v.path && v.path.startsWith("/")) {
       res = v.path;
     } else if (v.name) {
@@ -1537,9 +1542,8 @@ var collectorRoutes_default = collectorRoutes;
 
 // packages/router/init/basic.js
 var BasicRouter = class {
-  constructor(app, options, propsData) {
+  constructor(app, options) {
     this.app = app;
-    this.propsData = propsData;
     this.app.router = {
       layouts: options.layouts || {},
       collection: [],
@@ -1572,6 +1576,7 @@ var BasicRouter = class {
     if (typeof path !== "string")
       return path;
     const url = new URL(location.origin + path);
+    history[v.state?.replaced ? "replaceState" : "pushState"](null, null, url.href);
     return await this.update(url, true, v.state);
   }
   async beforeHooks(hook) {
@@ -1642,8 +1647,6 @@ var Router = class extends BasicRouter {
     await this.update(window.location);
   }
   async render(to) {
-    if (to.pushed)
-      history[to.state.replaced ? "replaceState" : "pushState"](null, null, to.fullPath);
     const target = to.route;
     const from = this.app.router.from;
     if (this.current && from?.route.component !== target.component) {
@@ -1656,7 +1659,7 @@ var Router = class extends BasicRouter {
     }
     if (target.layout) {
       if (to.state.reloaded || from?.route.layout !== target.layout) {
-        this.currentLayout = await this.app.mount({ options: this.app.router.layouts[target.layout], target: this.rootContainer }, this.propsData);
+        this.currentLayout = await this.app.mount(this.app.router.layouts[target.layout], this.rootContainer);
         if (!this.currentLayout)
           return;
         this.container = this.rootContainer.querySelector("[router]");
@@ -1673,7 +1676,8 @@ var Router = class extends BasicRouter {
     this.rootContainer.setAttribute("page", target.name || "");
     if (to.state.reloaded || from?.route.component !== target.component) {
       window.scrollTo(0, 0);
-      this.current = await this.app.mount({ options: target.component, target: this.container }, this.propsData);
+      this.current = await this.app.mount(target.component, this.container);
+      this.currentLayout?.refresh?.({ cause: "pageChanged" });
       if (!this.current)
         return;
     } else
@@ -1689,8 +1693,8 @@ var Router = class extends BasicRouter {
 };
 
 // packages/router/index.js
-function createRouter(app, options, propsData = {}) {
-  return new Router(app, options, propsData);
+function createRouter(app, options) {
+  return new Router(app, options);
 }
 
 // packages/lesta/factoryNode.js
@@ -1700,7 +1704,7 @@ function factoryNode_default(...args) {
 }
 
 // packages/lesta/mountWidget.js
-async function mountWidget({ options, target }, app = {}) {
+async function mountWidget(options, target, app = {}) {
   if (!options)
     return errorComponent(name, 216);
   if (!target)
