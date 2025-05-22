@@ -1,23 +1,23 @@
-##_APP
+## _APP
 createApp
 
-###counter
+### counter
 
-###counterWebComponent
+### counterWebComponent
 
-###markupFirst
+### markupFirst
 
-###similarNodes
+### similarNodes
 
 
-##_Widget
+## _Widget
 mountWidget
 
-##todolistStore
+## todolistStore
 
-###listRendering
+### listRendering
 
-###livelyHooks
+### livelyHooks
 
 
 
